@@ -10,62 +10,57 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             background: linear-gradient(135deg, #6e8efb, #a777e3);
             color: #333;
         }
         .container {
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(255, 255, 255, 0.9);
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-            width: 90%;
-            max-width: 500px;
+            width: 100%;
+            max-width: 600px;
         }
         h1 {
             text-align: center;
-            color: #333;
+            color: #4a4a4a;
             margin-bottom: 20px;
         }
         .sudoku-board {
-            display: inline-grid;
+            display: grid;
             grid-template-columns: repeat(9, 1fr);
-            gap: 1px;
-            background-color: #333;
-            padding: 3px;
-            border: 2px solid #333;
-            border-radius: 5px;
+            grid-template-rows: repeat(9, 1fr);
+            gap: 2px;
+            background-color: #4a4a4a;
+            padding: 5px;
+            max-width: 90vmin;
+            max-height: 90vmin;
+            margin: 0 auto;
+            aspect-ratio: 1 / 1;
         }
         .cell {
             width: 100%;
-            height: 0;
-            padding-bottom: 100%; /* Maintain square ratio */
+            height: 100%;
             background-color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 4vw;
+            font-size: calc(2vmin + 6px);
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        .cell:hover {
-            background-color: #e3f2fd;
-        }
-        .cell:nth-child(3n) {
-            border-right: 2px solid #333;
-        }
-        .cell:nth-child(n+19):nth-child(-n+27),
-        .cell:nth-child(n+46):nth-child(-n+54) {
-            border-bottom: 2px solid #333;
-        }
         .cell.given {
-            background-color: #f2f2f2;
-            color: #333;
+            background-color: #e0e0e0;
+            color: #4a4a4a;
+        }
+        .cell:hover {
+            background-color: #e6f2ff;
         }
         .cell.selected {
-            background-color: #a3d2ca;
+            background-color: #bbdefb;
         }
         .cell.invalid {
             color: #f44336;
@@ -109,11 +104,12 @@
             display: flex;
             justify-content: center;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
         .number-btn {
             width: 40px;
             height: 40px;
-            margin: 0 5px;
+            margin: 5px;
             font-size: 18px;
             background-color: #9575CD;
             color: white;
@@ -121,32 +117,10 @@
         .number-btn:hover {
             background-color: #7E57C2;
         }
-        #eraseBtn {
-            background-color: #ff5252;
-        }
-        #eraseBtn:hover {
-            background-color: #ff1744;
-        }
         #timer, #difficulty {
             font-size: 18px;
             font-weight: bold;
         }
-        
-        /* Media queries for responsiveness */
-        @media (max-width: 600px) {
-            .cell {
-                font-size: 3vw;
-            }
-            button {
-                font-size: 14px;
-                padding: 8px 15px;
-            }
-            .number-btn {
-                width: 35px;
-                height: 35px;
-            }
-        }
-
     </style>
 </head>
 <body>
@@ -201,6 +175,7 @@
                 cell.addEventListener('click', selectCell);
                 board.appendChild(cell);
             }
+            adjustCellSize();
         }
 
         function selectCell(e) {
@@ -212,15 +187,20 @@
         }
 
         function fillBoard() {
-            const cells = board.getElementsByClassName('cell');
+            const cells = document.getElementsByClassName('cell');
             for (let i = 0; i < 81; i++) {
                 const value = puzzle[i];
                 cells[i].textContent = value || '';
-                cells[i].classList.toggle('given', value !== 0);
+                if (value !== 0) {
+                    cells[i].classList.add('given');
+                } else {
+                    cells[i].classList.remove('given');
+                }
             }
         }
 
         function generatePuzzle() {
+            // A simplified puzzle generator
             const base = [
                 [1, 2, 3, 4, 5, 6, 7, 8, 9],
                 [4, 5, 6, 7, 8, 9, 1, 2, 3],
@@ -233,7 +213,7 @@
                 [9, 1, 2, 3, 4, 5, 6, 7, 8]
             ];
 
-            // Shuffle rows within each 3x3 block
+            // Shuffle rows and columns within each 3x3 block
             for (let i = 0; i < 9; i += 3) {
                 let rows = base.slice(i, i + 3);
                 rows = shuffleArray(rows);
@@ -242,9 +222,27 @@
                 }
             }
 
-            // Flatten puzzle
-            puzzle = base.flat();
-            solution = [...puzzle]; // Copy for solution checking
+            solution = base.flat();
+            puzzle = [...solution];
+
+            // Remove numbers based on difficulty
+            let numbersToRemove;
+            switch (difficulty) {
+                case 'easy':
+                    numbersToRemove = 30;
+                    break;
+                case 'medium':
+                    numbersToRemove = 40;
+                    break;
+                case 'hard':
+                    numbersToRemove = 50;
+                    break;
+            }
+
+            for (let i = 0; i < numbersToRemove; i++) {
+                const index = Math.floor(Math.random() * 81);
+                puzzle[index] = 0;
+            }
         }
 
         function shuffleArray(array) {
@@ -260,22 +258,56 @@
             seconds = 0;
             timerInterval = setInterval(() => {
                 seconds++;
-                let mins = Math.floor(seconds / 60);
-                let secs = seconds % 60;
-                timerDisplay.textContent = `Time: ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                const minutes = Math.floor(seconds / 60);
+                const sec = seconds % 60;
+                timerDisplay.textContent = `Time: ${minutes < 10 ? '0' : ''}${minutes}:${sec < 10 ? '0' : ''}${sec}`;
             }, 1000);
         }
 
-        function newGame() {
+        function handleNewGame() {
             generatePuzzle();
             fillBoard();
             startTimer();
         }
 
+        function solvePuzzle() {
+            puzzle = [...solution];
+            fillBoard();
+            clearInterval(timerInterval);
+        }
+
+        function checkPuzzle() {
+            const cells = document.getElementsByClassName('cell');
+            let isCorrect = true;
+            for (let i = 0; i < 81; i++) {
+                if (parseInt(cells[i].textContent) !== solution[i]) {
+                    cells[i].classList.add('invalid');
+                    isCorrect = false;
+                } else {
+                    cells[i].classList.remove('invalid');
+                }
+            }
+            if (isCorrect) {
+                alert('Congratulations! You solved the puzzle!');
+                clearInterval(timerInterval);
+            }
+        }
+
+        function adjustCellSize() {
+            const boardSize = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.7);
+            board.style.width = `${boardSize}px`;
+            board.style.height = `${boardSize}px`;
+        }
+
+        newGameBtn.addEventListener('click', handleNewGame);
+        solveBtn.addEventListener('click', solvePuzzle);
+        checkBtn.addEventListener('click', checkPuzzle);
+
         numberBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 if (selectedCell && !selectedCell.classList.contains('given')) {
                     selectedCell.textContent = btn.textContent;
+                    puzzle[selectedCell.dataset.index] = parseInt(btn.textContent);
                     selectedCell.classList.remove('invalid');
                 }
             });
@@ -284,12 +316,16 @@
         eraseBtn.addEventListener('click', () => {
             if (selectedCell && !selectedCell.classList.contains('given')) {
                 selectedCell.textContent = '';
+                puzzle[selectedCell.dataset.index] = 0;
+                selectedCell.classList.remove('invalid');
             }
         });
 
-        newGameBtn.addEventListener('click', newGame);
+        window.addEventListener('resize', adjustCellSize);
 
-        newGame();
+        createBoard();
+        handleNewGame();
+        adjustCellSize();
     </script>
 </body>
 </html>
