@@ -5,16 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Colorful Sudoku Game</title>
     <style>
-        :root {
-            --cell-size: 40px;
-            --font-size: 1.2rem;
-        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
             margin: 0;
             background: linear-gradient(135deg, #6e8efb, #a777e3);
             color: #333;
@@ -24,33 +20,29 @@
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-            max-width: 95%;
-            width: 450px;
         }
         h1 {
             text-align: center;
             color: #4a4a4a;
             margin-bottom: 20px;
-            font-size: 2rem;
         }
         .sudoku-board {
-            display: grid;
-            grid-template-columns: repeat(9, 1fr);
+            display: inline-grid;
+            grid-template-columns: repeat(9, 45px);
             gap: 1px;
             background-color: #4a4a4a;
             padding: 3px;
             border: 2px solid #4a4a4a;
             border-radius: 5px;
-            margin: 0 auto;
         }
         .cell {
-            width: var(--cell-size);
-            height: var(--cell-size);
+            width: 45px;
+            height: 45px;
             background-color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: var(--font-size);
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -71,22 +63,9 @@
         }
         .cell.selected {
             background-color: #bbdefb;
-            animation: pulse 1s infinite alternate;
         }
         .cell.invalid {
             color: #f44336;
-            animation: shake 0.5s;
-        }
-        @keyframes pulse {
-            from { transform: scale(1); }
-            to { transform: scale(1.05); }
-        }
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            50% { transform: translateX(5px); }
-            75% { transform: translateX(-5px); }
-            100% { transform: translateX(0); }
         }
         .controls {
             display: flex;
@@ -97,25 +76,19 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 20px;
-            font-size: 0.9rem;
         }
         button {
-            font-size: 1rem;
-            padding: 10px 15px;
+            font-size: 16px;
+            padding: 10px 20px;
             cursor: pointer;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 5px;
-            transition: all 0.3s ease;
-            touch-action: manipulation;
+            transition: background-color 0.3s ease;
         }
         button:hover {
             background-color: #45a049;
-            transform: translateY(-2px);
-        }
-        button:active {
-            transform: translateY(0);
         }
         #solveBtn {
             background-color: #2196F3;
@@ -130,49 +103,24 @@
             background-color: #e6ae06;
         }
         .number-input {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
+            display: flex;
+            justify-content: center;
             margin-top: 20px;
         }
         .number-btn {
-            aspect-ratio: 1;
-            font-size: var(--font-size);
+            width: 40px;
+            height: 40px;
+            margin: 0 5px;
+            font-size: 18px;
             background-color: #9575CD;
             color: white;
-            border: none;
-            border-radius: 5px;
-            transition: all 0.3s ease;
         }
         .number-btn:hover {
             background-color: #7E57C2;
-            transform: translateY(-2px);
-        }
-        .number-btn:active {
-            transform: translateY(0);
         }
         #timer, #difficulty {
-            font-size: 1rem;
+            font-size: 18px;
             font-weight: bold;
-        }
-        @media (max-width: 480px) {
-            :root {
-                --cell-size: 30px;
-                --font-size: 1rem;
-            }
-            .container {
-                padding: 10px;
-            }
-            h1 {
-                font-size: 1.5rem;
-            }
-            .controls button {
-                font-size: 0.9rem;
-                padding: 8px 12px;
-            }
-            .number-input {
-                gap: 5px;
-            }
         }
     </style>
 </head>
@@ -244,11 +192,6 @@
                 const value = puzzle[i];
                 cells[i].textContent = value || '';
                 cells[i].classList.toggle('given', value !== 0);
-                cells[i].style.opacity = '0';
-                setTimeout(() => {
-                    cells[i].style.opacity = '1';
-                    cells[i].style.transition = 'opacity 0.5s ease';
-                }, i * 10);
             }
         }
 
@@ -323,7 +266,7 @@
             seconds = 0;
             updateTimer();
             difficulty = ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)];
-            difficultyDisplay.textContent = `Difficulty: ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`;
+            difficultyDisplay.textContent = Difficulty: ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)};
             generatePuzzle();
             fillBoard();
             timerInterval = setInterval(updateTimer, 1000);
@@ -332,15 +275,8 @@
         function solve() {
             const cells = board.getElementsByClassName('cell');
             for (let i = 0; i < 81; i++) {
-                setTimeout(() => {
-                    cells[i].textContent = solution[i];
-                    cells[i].classList.remove('invalid');
-                    cells[i].style.transition = 'all 0.3s ease';
-                    cells[i].style.transform = 'scale(1.1)';
-                    setTimeout(() => {
-                        cells[i].style.transform = 'scale(1)';
-                    }, 150);
-                }, i * 20);
+                cells[i].textContent = solution[i];
+                cells[i].classList.remove('invalid');
             }
             clearInterval(timerInterval);
         }
@@ -360,16 +296,14 @@
             }
             if (isCorrect) {
                 clearInterval(timerInterval);
-                setTimeout(() => {
-                    alert('Congratulations! You solved the puzzle!');
-                }, 500);
+                alert('Congratulations! You solved the puzzle!');
             }
         }
 
         function updateTimer() {
             const minutes = Math.floor(seconds / 60);
             const remainingSeconds = seconds % 60;
-            timerDisplay.textContent = `Time: ${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            timerDisplay.textContent = Time: ${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')};
             seconds++;
         }
 
@@ -377,10 +311,6 @@
             if (selectedCell && !selectedCell.classList.contains('given')) {
                 selectedCell.textContent = number;
                 selectedCell.classList.remove('invalid');
-                selectedCell.style.transform = 'scale(1.1)';
-                setTimeout(() => {
-                    selectedCell.style.transform = 'scale(1)';
-                }, 100);
             }
         }
 
@@ -400,4 +330,18 @@
         numberBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 if (btn.textContent !== '⌫') {
-                    handleNumberInput
+                    handleNumberInput(btn.textContent);
+                } else {
+                    if (selectedCell) {
+                        selectedCell.textContent = '';
+                        selectedCell.classList.remove('invalid');
+                    }
+                }
+            });
+        });
+
+        createBoard();
+        newGame();
+    </script>
+</body>
+</html>
