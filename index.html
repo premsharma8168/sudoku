@@ -16,53 +16,56 @@
             color: #333;
         }
         .container {
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: rgba(255, 255, 255, 0.95);
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 500px;
         }
         h1 {
             text-align: center;
-            color: #4a4a4a;
+            color: #333;
             margin-bottom: 20px;
         }
         .sudoku-board {
             display: inline-grid;
-            grid-template-columns: repeat(9, 45px);
+            grid-template-columns: repeat(9, 1fr);
             gap: 1px;
-            background-color: #4a4a4a;
+            background-color: #333;
             padding: 3px;
-            border: 2px solid #4a4a4a;
+            border: 2px solid #333;
             border-radius: 5px;
         }
         .cell {
-            width: 45px;
-            height: 45px;
+            width: 100%;
+            height: 0;
+            padding-bottom: 100%; /* Maintain square ratio */
             background-color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 20px;
+            font-size: 4vw;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
         }
         .cell:hover {
-            background-color: #e6f2ff;
+            background-color: #e3f2fd;
         }
         .cell:nth-child(3n) {
-            border-right: 2px solid #4a4a4a;
+            border-right: 2px solid #333;
         }
         .cell:nth-child(n+19):nth-child(-n+27),
         .cell:nth-child(n+46):nth-child(-n+54) {
-            border-bottom: 2px solid #4a4a4a;
+            border-bottom: 2px solid #333;
         }
         .cell.given {
-            background-color: #e0e0e0;
-            color: #4a4a4a;
+            background-color: #f2f2f2;
+            color: #333;
         }
         .cell.selected {
-            background-color: #bbdefb;
+            background-color: #a3d2ca;
         }
         .cell.invalid {
             color: #f44336;
@@ -118,10 +121,32 @@
         .number-btn:hover {
             background-color: #7E57C2;
         }
+        #eraseBtn {
+            background-color: #ff5252;
+        }
+        #eraseBtn:hover {
+            background-color: #ff1744;
+        }
         #timer, #difficulty {
             font-size: 18px;
             font-weight: bold;
         }
+        
+        /* Media queries for responsiveness */
+        @media (max-width: 600px) {
+            .cell {
+                font-size: 3vw;
+            }
+            button {
+                font-size: 14px;
+                padding: 8px 15px;
+            }
+            .number-btn {
+                width: 35px;
+                height: 35px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -196,8 +221,6 @@
         }
 
         function generatePuzzle() {
-            // This is a simplified puzzle generator
-            // In a real game, you'd want a more sophisticated algorithm
             const base = [
                 [1, 2, 3, 4, 5, 6, 7, 8, 9],
                 [4, 5, 6, 7, 8, 9, 1, 2, 3],
@@ -219,38 +242,9 @@
                 }
             }
 
-            // Shuffle columns within each 3x3 block
-            for (let i = 0; i < 9; i += 3) {
-                let cols = [0, 1, 2].map(j => base.map(row => row[i + j]));
-                cols = shuffleArray(cols);
-                for (let j = 0; j < 3; j++) {
-                    for (let k = 0; k < 9; k++) {
-                        base[k][i + j] = cols[j][k];
-                    }
-                }
-            }
-
-            solution = base.flat();
-            puzzle = [...solution];
-
-            // Remove numbers based on difficulty
-            let numbersToRemove;
-            switch (difficulty) {
-                case 'easy':
-                    numbersToRemove = 30;
-                    break;
-                case 'medium':
-                    numbersToRemove = 40;
-                    break;
-                case 'hard':
-                    numbersToRemove = 50;
-                    break;
-            }
-
-            for (let i = 0; i < numbersToRemove; i++) {
-                const index = Math.floor(Math.random() * 81);
-                puzzle[index] = 0;
-            }
+            // Flatten puzzle
+            puzzle = base.flat();
+            solution = [...puzzle]; // Copy for solution checking
         }
 
         function shuffleArray(array) {
@@ -261,86 +255,40 @@
             return array;
         }
 
-        function newGame() {
+        function startTimer() {
             clearInterval(timerInterval);
             seconds = 0;
-            updateTimer();
-            difficulty = ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)];
-            difficultyDisplay.textContent = Difficulty: ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)};
+            timerInterval = setInterval(() => {
+                seconds++;
+                let mins = Math.floor(seconds / 60);
+                let secs = seconds % 60;
+                timerDisplay.textContent = `Time: ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function newGame() {
             generatePuzzle();
             fillBoard();
-            timerInterval = setInterval(updateTimer, 1000);
+            startTimer();
         }
-
-        function solve() {
-            const cells = board.getElementsByClassName('cell');
-            for (let i = 0; i < 81; i++) {
-                cells[i].textContent = solution[i];
-                cells[i].classList.remove('invalid');
-            }
-            clearInterval(timerInterval);
-        }
-
-        function checkSolution() {
-            const cells = board.getElementsByClassName('cell');
-            let isCorrect = true;
-            for (let i = 0; i < 81; i++) {
-                const cellValue = cells[i].textContent;
-                const solutionValue = solution[i].toString();
-                if (cellValue === solutionValue) {
-                    cells[i].classList.remove('invalid');
-                } else {
-                    cells[i].classList.add('invalid');
-                    isCorrect = false;
-                }
-            }
-            if (isCorrect) {
-                clearInterval(timerInterval);
-                alert('Congratulations! You solved the puzzle!');
-            }
-        }
-
-        function updateTimer() {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-            timerDisplay.textContent = Time: ${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')};
-            seconds++;
-        }
-
-        function handleNumberInput(number) {
-            if (selectedCell && !selectedCell.classList.contains('given')) {
-                selectedCell.textContent = number;
-                selectedCell.classList.remove('invalid');
-            }
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (selectedCell && e.key >= '1' && e.key <= '9') {
-                handleNumberInput(e.key);
-            } else if (selectedCell && (e.key === 'Backspace' || e.key === 'Delete')) {
-                selectedCell.textContent = '';
-                selectedCell.classList.remove('invalid');
-            }
-        });
-
-        newGameBtn.addEventListener('click', newGame);
-        solveBtn.addEventListener('click', solve);
-        checkBtn.addEventListener('click', checkSolution);
 
         numberBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                if (btn.textContent !== '⌫') {
-                    handleNumberInput(btn.textContent);
-                } else {
-                    if (selectedCell) {
-                        selectedCell.textContent = '';
-                        selectedCell.classList.remove('invalid');
-                    }
+                if (selectedCell && !selectedCell.classList.contains('given')) {
+                    selectedCell.textContent = btn.textContent;
+                    selectedCell.classList.remove('invalid');
                 }
             });
         });
 
-        createBoard();
+        eraseBtn.addEventListener('click', () => {
+            if (selectedCell && !selectedCell.classList.contains('given')) {
+                selectedCell.textContent = '';
+            }
+        });
+
+        newGameBtn.addEventListener('click', newGame);
+
         newGame();
     </script>
 </body>
